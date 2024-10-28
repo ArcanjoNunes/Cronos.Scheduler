@@ -3,15 +3,15 @@
 class CronosHostedService : BackgroundService
 {
     private readonly TimeSpan _period = TimeSpan.FromSeconds(5);
-    private readonly ILogger<CronosHostedService> _logger;
     private readonly IServiceScopeFactory _factory;
     private int _executionCount = 0;
     
     public bool IsEnabled { get; set; }
+    public bool StopIt { get; set; } = false;
+    public int MaxTasks { get; set; } = 1;
 
-    public CronosHostedService(ILogger<CronosHostedService> logger, IServiceScopeFactory factory)
+    public CronosHostedService(IServiceScopeFactory factory)
     {
-        _logger = logger;
         _factory = factory;
     }
 
@@ -30,6 +30,12 @@ class CronosHostedService : BackgroundService
         while (!stoppingToken.IsCancellationRequested && 
                 await timer.WaitForNextTickAsync(stoppingToken))
         {
+            if (StopIt) 
+            { 
+                Log.Information($"* USER REQUEST: STOPPING CRONOS.");
+                break; 
+            }
+            
             try
             {
                 if (IsEnabled)
@@ -39,28 +45,41 @@ class CronosHostedService : BackgroundService
                     // To prevent open resources and instances, only create the services and other references on a run
 
                     // Create scope, so we get request services
+
                     await using AsyncServiceScope asyncScope = _factory.CreateAsyncScope();
 
-                    // Get service from scope
+                    // Get services from scope
 
+                    Log.Information($" *** Running Service One");
                     ServiceRepositoryOne serviceRepositoryOne = asyncScope.ServiceProvider.GetRequiredService<ServiceRepositoryOne>();
                     await serviceRepositoryOne.DoServiceOneAsync();
 
+                    Log.Information($" *** Running Service Two");
                     ServiceRepositoryTwo serviceRepositoryTwo = asyncScope.ServiceProvider.GetRequiredService<ServiceRepositoryTwo>();
                     await serviceRepositoryTwo.DoServiceTwoAsync();
 
+                    Log.Information($" *** Running Service Three");
+                    ServiceRepositoryThree serviceRepositoryThree = asyncScope.ServiceProvider.GetRequiredService<ServiceRepositoryThree>();
+                    await serviceRepositoryThree.DoServiceThreeAsync();
+
                     _executionCount++;
-                    _logger.LogInformation($"Executed PeriodicHostedService - Count: {_executionCount}");
+                    Log.Information($"Executed PeriodicHostedService - Count: {_executionCount}");
+
+                    if (_executionCount >= MaxTasks)
+                    {
+                        Log.Information($"* MAX TASKS REACHED. STOPPING CRONOS.");
+                        break;
+                    }
 
                 }
                 else
                 {
-                    _logger.LogInformation("Skipped PeriodicHostedService");
+                    Log.Information("Skipped PeriodicHostedService");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogInformation($"Failed to execute PeriodicHostedService with exception message {ex.Message}. Good luck next round!");
+                Log.Information($"Failed to execute PeriodicHostedService with exception message {ex.Message}. Good luck next round!");
             }
         }
     }

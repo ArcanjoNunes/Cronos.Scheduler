@@ -4,7 +4,7 @@ public static class AppMapSetupServer
 {
     public static void AppMapSetup(this WebApplication app)
     {
-        app.MapGet("/", () => "Cronos is running.");
+        app.MapGet("/", () => "Cronos Service is running.");
 
         app.MapGet("/CronosGetStatus", 
             (
@@ -20,6 +20,23 @@ public static class AppMapSetupServer
                 CronosHostedService service) =>
                     {
                         service.IsEnabled = state.IsEnabled;
+                    }
+            );
+
+        app.MapMethods("/CronosSetMaxTask", new[] { "PATCH" },
+            (
+                CronosHostedServiceMaxTask maxTaskCount,
+                CronosHostedService service) =>
+            {
+                service.MaxTasks = maxTaskCount.maxTask;
+            }
+            );
+
+        app.MapPost("/CronosStop",
+            (
+                CronosHostedService service) =>
+                    {
+                        service.StopIt = true;
                     }
             );
     }
