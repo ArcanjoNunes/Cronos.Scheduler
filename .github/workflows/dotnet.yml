@@ -39,5 +39,8 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: 'bin/release/net8.0/'
+        local-dir: 'bin/release/net8.0/publish/'
         server-dir: '/cronos.scheduler/'         
+        exclude: |
+          **/.pdb*
+          
