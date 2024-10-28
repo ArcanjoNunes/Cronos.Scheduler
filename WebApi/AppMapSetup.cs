@@ -4,7 +4,7 @@ public static class AppMapSetupServer
 {
     public static void AppMapSetup(this WebApplication app)
     {
-        app.MapGet("/", () => "Cronos Server is running.");
+        app.MapGet("/", () => "Cronos is running.");
 
         app.MapGet("/CronosGetStatus", 
             (
