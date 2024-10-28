@@ -42,5 +42,5 @@ jobs:
         local-dir: 'bin/release/net8.0/publish/'
         server-dir: '/cronos.scheduler/'         
         exclude: |
-          **/.pdb*
+          **/*.pdb
           
